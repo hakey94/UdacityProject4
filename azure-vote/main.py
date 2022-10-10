@@ -6,23 +6,31 @@ import socket
 import sys
 import logging
 from datetime import datetime
+from opencensus.ext.flask.flask_middleware import FlaskMiddleware
+from opencensus.ext.azure.trace_exporter import AzureExporter
+from opencensus.trace.samplers import ProbabilitySampler
+from opencensus.ext.azure.log_exporter import AzureLogHandler
+from opencensus.ext.azure import metrics_exporter
+from opencensus.trace.tracer import Tracer
 
 # App Insights
 # TODO: Import required libraries for App Insights
-
-# Logging
-logger = # TODO: Setup logger
-
-# Metrics
-exporter = # TODO: Setup exporter
-
-# Tracing
-tracer = # TODO: Setup tracer
-
+instrumentationKey = '6925caae-f06a-4781-aea3-f65434d3945f'
+conn = 'InstrumentationKey={instrumentationKey}'
 app = Flask(__name__)
 
 # Requests
-middleware = # TODO: Setup flask middleware
+middleware = FlaskMiddleware(app, exporter=AzureExporter(connection_string=conn), sampler=ProbabilitySampler(rate=1.0))
+
+# Logging
+logger = logging.getLogger(__name__) # TODO: Setup logger
+logger.addHandler(AzureLogHandler(connection_string=conn))
+
+# Metrics
+exporter = metrics_exporter.new_metrics_exporter(enable_standard_metrics=True, connection_string=conn) # TODO: Setup exporter
+
+# Tracing
+tracer = Tracer(exporter = AzureExporter( connection_string = conn, sampler = ProbabilitySampler(1.0))) # TODO: Setup tracer
 
 # Load configurations from environment or config file
 app.config.from_pyfile('config_file.cfg')
@@ -77,10 +85,12 @@ def index():
             vote1 = r.get(button1).decode('utf-8')
             properties = {'custom_dimensions': {'Cats Vote': vote1}}
             # TODO: use logger object to log cat vote
+            logger.warning('Cats', extra=properties)
 
             vote2 = r.get(button2).decode('utf-8')
             properties = {'custom_dimensions': {'Dogs Vote': vote2}}
             # TODO: use logger object to log dog vote
+            logger.warning('Dogs', extra=properties)
 
             return render_template("index.html", value1=int(vote1), value2=int(vote2), button1=button1, button2=button2, title=title)
 
@@ -99,6 +109,6 @@ def index():
 
 if __name__ == "__main__":
     # TODO: Use the statement below when running locally
-    app.run() 
+    # app.run() 
     # TODO: Use the statement below before deployment to VMSS
-    # app.run(host='0.0.0.0', threaded=True, debug=True) # remote
+    app.run(host='0.0.0.0', threaded=True, debug=True) # remote

@@ -15,8 +15,7 @@ from opencensus.trace.tracer import Tracer
 
 # App Insights
 # TODO: Import required libraries for App Insights
-instrumentationKey = '5b735489-2dd0-4248-bf43-40800ce74b64'
-conn = 'InstrumentationKey=5b735489-2dd0-4248-bf43-40800ce74b64'
+conn = 'InstrumentationKey=4a0db0aa-bb66-41a0-8248-cdcef35ae5b1'
 app = Flask(__name__)
 
 # Requests
